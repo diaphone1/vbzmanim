@@ -3,13 +3,6 @@ Dim hebrewDate As hdate
 Dim shabbos As hdate
 Dim erevshabbos As hdate
 Dim here As location
-Dim data_tag_col As New Collection
-
-Dim hebrewDate As hdate
-Dim shabbos As hdate
-Dim erevshabbos As hdate
-Dim here As location
-Dim data_tag_col As New Collection
 
 Sub Test_Zmanim2()
 Dim heb_date As hdate
@@ -105,9 +98,9 @@ shabbosstr = shabbosstr & vbCrLf & "הדלקת נרות: " & Format(DateAdd("n", -40, (HD
 shabbosstr = shabbosstr & vbCrLf & "מוצש: " & Format((HDateGregorian(gettzais8p5(shabbos, here))), "hh:mm:ss")
 shabbosstr = shabbosstr & vbCrLf & "מוצש רת: " & Format(DateAdd("n", 72, (HDateGregorian(getelevationsunset(shabbos, here)))), "hh:mm:ss")
 
-molad_str = "מולד הלבנה חודש נוכחי - " & NumToHMonth(hebrewDate.month, hebrewDate.leap) & vbCrLf & MoladFormat(GetMolad(hebrewDate.year, hebrewDate.month))
+'molad_str = "מולד הלבנה חודש נוכחי - " & NumToHMonth(hebrewDate.month, hebrewDate.leap) & vbCrLf & MoladFormat(GetMolad(hebrewDate.year, hebrewDate.month))
 Call HDateAddMonth(hebrewDate, 1)
-molad_str = molad_str & vbCrLf & vbCrLf & "מולד הלבנה חודש הבא - " & NumToHMonth(hebrewDate.month, hebrewDate.leap) & vbCrLf & MoladFormat(GetMolad(hebrewDate.year, hebrewDate.month))
+molad_str = "מולד הלבנה חודש הבא - " & NumToHMonth(hebrewDate.month, hebrewDate.leap) & " " & NumToHChar(hebrewDate.year) & vbCrLf & MoladFormat(GetMolad(hebrewDate.year, hebrewDate.month))
 
 MsgBox "זמני היום - ירושלים" & vbCrLf & zmanstr
 MsgBox "לימוד יומי - " & limudstr
