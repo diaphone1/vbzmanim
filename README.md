@@ -7,10 +7,10 @@ The Daf-Yomi related code was ported from https://github.com/NykUser/MyZman/
 ## Usage:
 Include the modules in your Visual Basic project ("mod_*" files) for using the calendar and zmanim functions.
 
-See below brief summary on using the calendar and zmanim functions.
+See below a brief summary on using the calendar and zmanim functions.
 
 ## The hdate data type:
-In Visual Basic, working with gregorian date involves the builtin "Date" data type.
+In Visual Basic, working with gregorian dates involves the builtin "Date" data type.
 
 For working with hebrew dates a dedicated type `hdate` is being used, which has simillar elements to "struct tm" type in C (year, month etc...) with some dedicated elements for the hebrew calendar (leap, EY and offset).
 
@@ -68,17 +68,17 @@ parsh = GetParshah(heb_date)
 If parsh <> NOPARSHAH Then
     'if the found date has a parshah then add it's parsha to the string
     'note - ParshahFormat converts parshah enum values to their titles in string
-    shabbos_title = "ùáú ôøùú " & ParshahFormat(parsh)
+    shabbos_title = "שבת פרשת " & ParshahFormat(parsh)
 Else
     'if the found date has no parsha then it is probably a yomtov or shabbos chol ha'moed
-    ytov = GetYomTov(shabbos)
+    ytov = GetYomTov(heb_date)
     'convert the found date from a yomyov enum value type to string using YomTovFormat
     If ytov <> CHOL Then shabbos_title = YomTovFormat(ytov)
 End If
 
 'check if the found date is a spacial shabbos (hagadol, 4 parshios etc)
-If GetSpecialShabbos(shabbos) <> CHOL Then
-    shabbos_title = shabbos_title & vbCrLf & YomTovFormat(GetSpecialShabbos(shabbos))
+If GetSpecialShabbos(heb_date) <> CHOL Then
+    shabbos_title = shabbos_title & vbCrLf & YomTovFormat(GetSpecialShabbos(heb_date))
 End If
 'show the result
 MsgBox shabbos_title
