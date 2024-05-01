@@ -59,10 +59,13 @@ Private Declare Function GetTimeZoneInformationForYear Lib "kernel32" ( _
 Function IsDaylightSavingTime(dt As Date) As Long
     Dim tzi As TIME_ZONE_INFORMATION
     Dim result As Long
-    'Exit Function
-    result = GetTimeZoneInformation(tzi) '
-    'result = GetTimeZoneInformationForYear(year(dt), ByVal 0&, tzi)
+    On Error GoTo NoYearFunc
     
+    result = GetTimeZoneInformationForYear(year(dt), ByVal 0&, tzi)
+    GoTo proceed
+NoYearFunc:
+    result = GetTimeZoneInformation(tzi)
+proceed:
     If result <> 0 Then ' TIME_ZONE_ID_DAYLIGHT
         ' Determine if the given date is within daylight saving time
         Dim dstStartDate As Date
@@ -91,7 +94,7 @@ Public Function mktm(ByVal date_in As Date) As TMStruct
     .tm_mday = day(date_in)
     .tm_mon = month(date_in) - 1
     .tm_year = year(date_in) - 1900
-    .tm_wday = weekday(date_in)
+    .tm_wday = Weekday(date_in)
     .tm_yday = DateDiff("d", jan1, DateSerial(result.tm_year, result.tm_mon, result.tm_mday)) + 1
     .tm_isdst = IsDST(date_in)
     End With
@@ -138,7 +141,7 @@ Public Function mkdate(ByRef tm_in As TMStruct, Optional time_only As Boolean = 
     Call ApplyOffset(0, offsetMonth, offsetDay, offsetHour, offsetMinute, offsetSecond, refDate)
     
     ' Calculate the day of the week (0 = Sunday, 1 = Monday, etc.)
-    If time_only = False Then tm_in.tm_wday = weekday(DateSerial(tm_in.tm_year, tm_in.tm_mon, tm_in.tm_mday))
+    If time_only = False Then tm_in.tm_wday = Weekday(DateSerial(tm_in.tm_year, tm_in.tm_mon, tm_in.tm_mday))
     
     ' Calculate the day of the year
     Dim jan1 As Date

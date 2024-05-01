@@ -121,10 +121,10 @@ Public Sub init_hdateformat()
     hdateformat_ready = True
 End Sub
 
-Public Function parshahformat(current As parshah) As String
+Public Function ParshahFormat(current As parshah) As String
     If hdateformat_ready = False Then init_hdateformat
     
-    parshahformat = parshahchar(current)
+    ParshahFormat = parshahchar(current)
 End Function
 
 Function GetHChar(ByVal num As Integer) As String
@@ -201,7 +201,8 @@ Function AddChar(ByVal year As String, ByVal charnum As Integer, ByRef num As In
     AddChar = endStr
 End Function
 
-Function NumToHChar(ByVal innum As Integer) As String
+'convert an int to a Hebrew char based representation. 5779 becomes תשע"ט
+Public Function NumToHChar(ByVal innum As Integer) As String
     Dim num As Integer
     num = innum
     Dim year As String
@@ -251,6 +252,8 @@ ContinueLoop:
     If innum < 11 Then NumToHChar = NumToHChar + "'"
 End Function
 
+'convert int based Hebrew weekday (hdate.wday) to char based representation.
+'second argument is a booean if to use שבת (true) or שביעי (false)
 Function NumToWDay(date_in As hdate, ByVal shabbos As Boolean) As String
     If hdateformat_ready = False Then init_hdateformat
     If shabbos And date_in.wday = 0 Then
@@ -260,6 +263,7 @@ Function NumToWDay(date_in As hdate, ByVal shabbos As Boolean) As String
     End If
 End Function
 
+'convert int based Hebrew month (hdate.month) to char based representation.
 Function NumToHMonth(ByVal month As Integer, ByVal leap As Integer) As String
     If hdateformat_ready = False Then init_hdateformat
     If leap <> 0 Then
@@ -278,6 +282,7 @@ Function NumToHMonth(ByVal month As Integer, ByVal leap As Integer) As String
     End If
 End Function
 
+'convert hdate to string based representation
 Function HDateFormat(date_in As hdate) As String
     Dim day As String
     Dim year As String
@@ -289,6 +294,8 @@ Function HDateFormat(date_in As hdate) As String
     HDateFormat = day & " " & month & " " & year
 End Function
 
+'convert hdate to string based representation, with evening consideration;
+'if the time is between zais to sunrise of next day then add "אור ל-" for next day
 Function HDateOrFormat(date_in As hdate, here As location) As String
     Dim day As String
     Dim year As String
@@ -302,13 +309,13 @@ Function HDateOrFormat(date_in As hdate, here As location) As String
     Dim date_result As hdate
     date_next = date_in
     date_before = date_in
-    current_date = mkdate(HDateGregorian(date_in))
+    current_date = (HDateGregorian(date_in))
     Call HDateAddDay(date_next, 1)
     Call HDateAddDay(date_before, -1)
-    sunset_today = mkdate(HDateGregorian(gettzais8p5(date_in, here)))
-    sunrise_today = mkdate(HDateGregorian(getsunrise(date_in, here)))
-    sunrise_tomorrow = mkdate(HDateGregorian(getsunrise(date_next, here)))
-    sunset_yesterday = mkdate(HDateGregorian(gettzais8p5(date_before, here)))
+    sunset_today = (HDateGregorian(gettzais8p5(date_in, here)))
+    sunrise_today = (HDateGregorian(getsunrise(date_in, here)))
+    sunrise_tomorrow = (HDateGregorian(getsunrise(date_next, here)))
+    sunset_yesterday = (HDateGregorian(gettzais8p5(date_before, here)))
     If current_date >= sunset_today Then
         is_or = True
         date_result = date_next
@@ -325,14 +332,12 @@ Function HDateOrFormat(date_in As hdate, here As location) As String
     If is_or Then HDateOrFormat = "אור ל-" & HDateOrFormat
 End Function
 
+'convert hdate holding molad info to string representation, suitable for molad announcement
 Function MoladFormat(molad As hdate) As String
-MoladFormat = "d " & NumToWDay(molad, True) & " a " & Format(TimeSerial(molad.hour, molad.min, 0), "hh:mm") & "ו-" & molad.sec & " חלקים"
-
-'& Format(mkdate(HDateGregorian(getsunrise(hebrewDate, here))), "hh:mm:ss")
-
+    MoladFormat = "יום " & NumToWDay(molad, True) & " שעה " & Format(TimeSerial(molad.hour, molad.min, 0), "hh:mm") & "ו-" & molad.sec & " חלקים"
 End Function
 
-
+'convert yomtov enum to char based representation
 Function YomTovFormat(ByVal current As yomtov) As String
     If hdateformat_ready = False Then init_hdateformat
     Select Case current
@@ -431,6 +436,7 @@ Function YomTovFormat(ByVal current As yomtov) As String
     End Select
 End Function
 
+'convert avos int to char based representation
 Function AvosFormat(ByVal avos As Integer) As String
     If hdateformat_ready = False Then init_hdateformat
     Select Case avos
@@ -455,5 +461,10 @@ Function AvosFormat(ByVal avos As Integer) As String
         Case Else
             AvosFormat = ""
     End Select
+End Function
+
+'rounds seconds of a time to an added or substracted minute
+Function tround(t As Date) As Date
+    tround = IIf(second(t) > 29, DateAdd("n", 1, t), t)
 End Function
 

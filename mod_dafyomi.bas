@@ -1,4 +1,6 @@
 Attribute VB_Name = "mod_dafyomi"
+'dafyomi list & functions ported from https://github.com/NykUser/MyZman/
+
 Public masechtosBavli(39) As String
 Public masechtosBavliTransliterated(39) As String
 Public blattPerMasechta(39) As Integer

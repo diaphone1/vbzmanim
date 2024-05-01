@@ -29,10 +29,10 @@ Public Function Chumash(date_in As hdate) As String
             current = VZOT_HABERACHAH
         ElseIf date_in.day = st Then
             If date_in.wday = 1 Then
-                Chumash = VBA.Strings.Format("פרשת %s\n%s עם פירש״י", parshahformat(BERESHIT), NumToWDay(date_in, False))
+                Chumash = VBA.Strings.Format("פרשת %s\n%s עם פירש״י", ParshahFormat(BERESHIT), NumToWDay(date_in, False))
                 Exit Function
             ElseIf date_in.wday = 0 Then
-                Chumash = VBA.Strings.Format("פרשת %s\n%s עם פירש״י", parshahformat(VZOT_HABERACHAH), NumToWDay(date_in, False))
+                Chumash = VBA.Strings.Format("פרשת %s\n%s עם פירש״י", ParshahFormat(VZOT_HABERACHAH), NumToWDay(date_in, False))
                 Exit Function
             Else
                 'Chumash = VBA.Strings.Format("parashat %s \n %s - shvii,\n %s \nrishon - %s with rashi", parshahformat(VZOT_HABERACHAH), NumToWDay(date_in, False), parshahformat(BERESHIT), NumToWDay(date_in, False))
@@ -41,7 +41,7 @@ Public Function Chumash(date_in As hdate) As String
         End If
     End If
     
-    Chumash = VBA.Strings.Format("פרשת %s\n%s עם פירש״י", parshahformat(current), NumToWDay(date_in, False))
+    Chumash = VBA.Strings.Format("פרשת %s\n%s עם פירש״י", ParshahFormat(current), NumToWDay(date_in, False))
 End Function
 
 Public Function Tehillim(date_in As hdate) As String
@@ -86,7 +86,7 @@ Public Function GetRambam(date_in As hdate, daily_chapter As Boolean) As String
     If shiur_ready = False Then init_shiur
     If daily_chapter Then
         'days since start of machzor 12
-        current = DateDiff("d", #12/15/2014#, mkdate(HDateGregorian(date_in))) Mod 1017 '= 1000 chapters + hagadah +  11 days for hakdamah  + 4 days for seder tfila
+        current = DateDiff("d", #12/15/2014#, (HDateGregorian(date_in))) Mod 1017 '= 1000 chapters + hagadah +  11 days for hakdamah  + 4 days for seder tfila
         GetRambam = rambamarray1chp(current)
     Else
         current = ((HebrewCalendarElapsedDays(date_in.year) + date_in.dayOfYear) - 2097823) Mod 339

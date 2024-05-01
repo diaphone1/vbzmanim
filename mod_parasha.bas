@@ -1,5 +1,8 @@
 Attribute VB_Name = "mod_parasha"
-Public parashaList(16, 55) As parshah
+'note - parsha lists were move to a seperate module
+'these are being used on relevant formatting functions on mod_hdateformat
+
+Public parashaList(16, 55) As parshah 'there are 16 different possible types of parasha lists
 Public parashaList_ready As Boolean
 
 Public Sub Init_parashalist()

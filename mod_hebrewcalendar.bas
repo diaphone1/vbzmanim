@@ -1,18 +1,18 @@
 Attribute VB_Name = "mod_hebrewcalendar"
 ' Define data structure for Hebrew date
 Public Type hdate
-    year As Long
-    month As Long
-    day As Long
-    dayOfYear As Long
-    wday As Long
-    leap As Long
-    hour As Long
-    min As Long
-    sec As Long
+    year As Long '0 - infinity
+    month As Long 'starts from nissan 1 - 13
+    day As Long '1-30
+    dayOfYear As Long 'starts from tishrei
+    wday As Long 'weekdays 1 - 6, 0
+    leap As Long 'if leap year
+    hour As Long '0-23
+    min As Long '0-59
+    sec As Long '0-59
     msec As Long
-    offset As Long
-    EY As Boolean
+    offset As Long 'timezone offset in seconds
+    EY As Boolean 'if Eretz Yisroel (for yomtov & parshah)
 End Type
 
 ' Define enumeration for yomtov
@@ -150,6 +150,7 @@ Public Enum parshah
     NITZAVIM_VAYELECH
 End Enum
 
+'is the year a leap year?
 Public Function HebrewLeapYear(year As Long) As Long
     If (((7 * year) + 1) Mod 19) < 7 Then
         HebrewLeapYear = 1
@@ -158,6 +159,7 @@ Public Function HebrewLeapYear(year As Long) As Long
     End If
 End Function
 
+'day from molad tohu until Rosh Hashana
 Public Function HebrewCalendarElapsedDays(year As Long) As Long
     Dim MonthsElapsed As Long
     MonthsElapsed = (235 * ((year - 1) \ 19)) + (12 * ((year - 1) Mod 19)) + ((7 * ((year - 1) Mod 19) + 1) \ 19)
@@ -225,6 +227,7 @@ Public Function LastDayOfHebrewMonth(month As Long, year As Long) As Long
     End If
 End Function
 
+'day of year for alef nissan
 Public Function NissanCount(year As Long) As Long
     Select Case DaysInHebrewYear(year)
         Case 353
@@ -240,10 +243,6 @@ Public Function NissanCount(year As Long) As Long
         Case 385
             NissanCount = 208
     End Select
-End Function
-
-Public Function HDateSize() As Long
-'    HDateSize = LenB(New hdate)
 End Function
 
 Public Function HDateNew(year As Long, month As Long, day As Long, _
@@ -267,7 +266,8 @@ Sub SetEY(ByRef date_in As hdate, EY As Boolean)
 End Sub
 
 
-Public Function ConvertDate(date_in As TMStruct) As hdate
+'Public Function ConvertDate(date_in As TMStruct) As hdate
+Public Function ConvertDate(date_in As Date) As hdate
     Dim result As hdate
     Dim julianDay As Double
     Dim d As Long
@@ -277,8 +277,10 @@ Public Function ConvertDate(date_in As TMStruct) As hdate
     Dim daycount As Long
     Dim dayOfYear As Long
     Dim nissanStart As Long
+    Dim tm_date_in As TMStruct
+    tm_date_in = mktm(date_in)
     
-    julianDay = GregorianJulian(date_in)
+    julianDay = GregorianJulian(tm_date_in)
     d = Fix(julianDay) - 347996
     m = (d * 25920#) / 765433#
     year = Fix((19 * m) / 235)
@@ -314,14 +316,15 @@ Public Function ConvertDate(date_in As TMStruct) As hdate
     result.wday = (HebrewCalendarElapsedDays(year) + dayOfYear) Mod 7
     result.dayOfYear = dayOfYear
     result.leap = HebrewLeapYear(year)
-    result.hour = date_in.tm_hour
-    result.min = date_in.tm_min
-    result.sec = date_in.tm_sec
+    result.hour = tm_date_in.tm_hour
+    result.min = tm_date_in.tm_min
+    result.sec = tm_date_in.tm_sec
 '    HDateSetDoy result
     ConvertDate = result
 End Function
 
-Public Function HDateGregorian(date_in As hdate) As TMStruct
+'convert a hdate to gregorian date
+Public Function HDateGregorian(date_in As hdate) As Date
     Dim result As TMStruct
     Dim JD As Double
     Dim a As Double
@@ -359,14 +362,10 @@ Public Function HDateGregorian(date_in As hdate) As TMStruct
     result.tm_sec = date_in.sec
     result.tm_isdst = -1
     
-    ' Use your own equivalent of mktime here
-    ' (since VBA doesn't have a direct equivalent)
-    Call mkdate(result)
-    
-    HDateGregorian = result
+    HDateGregorian = mkdate(result)
 End Function
 
-
+'convert a gregorian date to julian day
 Public Function GregorianJulian(date_in As TMStruct) As Double
     Dim year As Long
     Dim month As Long
@@ -387,6 +386,7 @@ Public Function GregorianJulian(date_in As TMStruct) As Double
     GregorianJulian = JD
 End Function
 
+'convert a hdate to julian day
 Public Function HDateJulian(date_in As hdate) As Double
     Dim diff As Double
     diff = 347996.5
@@ -450,6 +450,10 @@ Public Function Time_THDate(time As Double, offset As Long) As hdate
     Time_THDate = result
 End Function
 
+'compare 2 hdate:
+' returns 0 if they are the same
+' 1 if date1 < date2
+' and -1 if date1 > date2
 Public Function HDateCompare(date1 As hdate, date2 As hdate) As Long
     If date1.year < date2.year Then
         HDateCompare = 1
@@ -480,6 +484,9 @@ Public Function HDateCompare(date1 As hdate, date2 As hdate) As Long
     End If
 End Function
 
+' normalize a hdate and set the wday, dayofyear, and leap
+' converts 13 (Adar II) in a non leap year to 12
+' converts 30 cheshvan, kislev & adar to 29 in a year that only has 29 days
 Sub HDateSetDoy(ByRef date_in As hdate)
     Dim year As Long
     Dim month As Long
@@ -534,6 +541,7 @@ Sub HDateSetDoy(ByRef date_in As hdate)
     date_in.leap = HebrewLeapYear(year)
 End Sub
 
+' functions to add or subtract from a hdate field and then normalize the result
 Sub HDateAddYear(ByRef date_in As hdate, years As Long)
     Dim year As Long
     year = date_in.year
@@ -715,6 +723,10 @@ Sub HDateAdd(ByRef date_in As hdate, years As Long, months As Long, days As Long
     If mseconds Then HDateAddMSecond date_in, mseconds
 End Sub
 
+' Returns the molad of the given month remember month 1 is Nissan
+' beware that the seconds are actually chalakim 1/1080 of an hour
+' and that the hebrew date is actually the next one when the hour > 18
+' also the molad is calculated in Yerushalayim Mean Time so cannot be easily converted.
 Public Function GetMolad(year As Long, month As Long) As hdate
     Dim result As hdate
     result = HDateNew(0, 0, 0, 0, 0, 0, 0, 0)
@@ -763,6 +775,7 @@ Public Function GetMolad(year As Long, month As Long) As hdate
     GetMolad = result
 End Function
 
+'get the relevant type of parsha list for the year of the specified hdate (there are 16 different types in total)
 Public Function GetYearType(date_in As hdate) As Long
     Dim yearWday As Long
     GetYearType = -1
@@ -848,6 +861,7 @@ Public Function GetYearType(date_in As hdate) As Long
     
 End Function
 
+'if Shabbos get the current parshah otherwise return 0
 Public Function GetParshah(date_in As hdate) As parshah
     Dim yearType As Long
     Dim yearWday As Long
@@ -872,6 +886,7 @@ Public Function GetParshah(date_in As hdate) As parshah
     End If
 End Function
 
+'if yomtov get the current yomtov otherwise return 0
 Public Function GetYomTov(date_in As hdate) As yomtov
     GetYomTov = CHOL
     Select Case date_in.month
@@ -1015,7 +1030,7 @@ Public Function GetYomTov(date_in As hdate) As yomtov
     End Select
 End Function
 
-
+'if Shabbos get the current special parshah otherwise return 0
 Public Function GetSpecialShabbos(date_in As hdate) As yomtov
     GetSpecialShabbos = CHOL
     If date_in.wday = 0 Then
@@ -1052,6 +1067,7 @@ Public Function GetSpecialShabbos(date_in As hdate) As yomtov
     End If
 End Function
 
+'if rosh chodesh return rosh chodesh otherwise return 0
 Public Function GetRoshChodesh(date_in As hdate) As yomtov
     If date_in.day = 30 Or (date_in.day = 1 And date_in.month <> 7) Then
         GetRoshChodesh = ROSH_CHODESH
@@ -1060,6 +1076,7 @@ Public Function GetRoshChodesh(date_in As hdate) As yomtov
     End If
 End Function
 
+'if machar chodesh return machar chodesh otherwise return 0
 Public Function GetMacharChodesh(date_in As hdate) As yomtov
     If date_in.wday Then
         GetMacharChodesh = CHOL
@@ -1070,6 +1087,7 @@ Public Function GetMacharChodesh(date_in As hdate) As yomtov
     End If
 End Function
 
+'if shabbos mevorchim return shabbos mevorchim otherwise return 0
 Public Function GetShabbosMevorchim(date_in As hdate) As yomtov
     If date_in.wday Then
         GetShabbosMevorchim = CHOL
@@ -1080,6 +1098,7 @@ Public Function GetShabbosMevorchim(date_in As hdate) As yomtov
     End If
 End Function
 
+'The omer count 1 - 49 or 0 if none
 Public Function GetOmer(date_in As hdate) As Long
     Dim omer As Long
     If date_in.month = 1 And date_in.day >= 16 Then
@@ -1092,6 +1111,8 @@ Public Function GetOmer(date_in As hdate) As Long
     GetOmer = omer
 End Function
 
+' if Shabbos get the current chapter of avos otherwise return 0
+' returns 1 - 6 or 12 or 34 or 56 for double chapter
 Public Function GetAvos(date_in As hdate) As Long
     If date_in.wday Then
         GetAvos = 0 ' Shabbos
@@ -1152,6 +1173,7 @@ Public Function GetAvos(date_in As hdate) As Long
     End If
 End Function
 
+' return true if a ta'anis day
 Public Function IsTaAnis(date_in As hdate) As Boolean
     Dim current As yomtov
     current = GetYomTov(date_in)
@@ -1162,6 +1184,7 @@ Public Function IsTaAnis(date_in As hdate) As Boolean
     End If
 End Function
 
+' return true if assur be-melachah (shabbos, yom tov etc..)
 Public Function IsAssurBeMelachah(date_in As hdate) As Boolean
     Dim current As yomtov
     current = GetYomTov(date_in)
@@ -1171,6 +1194,8 @@ Public Function IsAssurBeMelachah(date_in As hdate) As Boolean
         IsAssurBeMelachah = False
     End If
 End Function
+
+' return 1 if cadlelighting regular, 2 if at nightfall, 3 if chanukah, or 0 if none
 Public Function IsCandleLighting(date_in As hdate) As Long
     If date_in.wday = 6 Then
         IsCandleLighting = 1
@@ -1222,6 +1247,7 @@ Public Function IsCandleLighting(date_in As hdate) As Long
     IsCandleLighting = 0
 End Function
 
+' return true if birchas hachama on date
 Public Function IsBirchasHaChama(date_in As hdate) As Boolean
     Dim yearstart As Long
     yearstart = HebrewCalendarElapsedDays(date_in.year)
@@ -1247,6 +1273,7 @@ Public Function TekufasTishreiElapsedDays(date_in As hdate) As Long
     TekufasTishreiElapsedDays = CInt(days - solar)
 End Function
 
+' return true if birchas hashanim is switched on date (winter)
 Public Function IsBirchasHaShanim(date_in As hdate) As Boolean
     If date_in.EY Then
         If date_in.month = 7 And date_in.day = 7 Then
@@ -1259,6 +1286,7 @@ Public Function IsBirchasHaShanim(date_in As hdate) As Boolean
     End If
 End Function
 
+' return true if tal umatar livrachah is said in birchas hashanim
 Public Function GetBirchasHaShanim(date_in As hdate) As Boolean
     If date_in.month = 1 And date_in.day < 15 Then
         GetBirchasHaShanim = True
