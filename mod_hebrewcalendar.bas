@@ -762,10 +762,20 @@ Public Function GetMolad(year As Long, month As Long) As hdate
     Dim ConjunctionParts As Long
     ConjunctionParts = (PartsElapsed Mod 1080) Mod 18
     
-    result.year = 1
-    result.month = 7
-    result.day = 1
-    HDateAddDay result, ConjunctionDay
+    If ConjunctionDay > 2085362 Then
+        'snapshot for shorter calculation - alef nissan 5710
+        result.year = 5710
+        result.month = 1
+        result.day = 1
+        result.wday = 1
+        
+        HDateAddDay result, ConjunctionDay - 2085362
+    Else
+        result.year = 1
+        result.month = 7
+        result.day = 1
+        HDateAddDay result, ConjunctionDay
+    End If
     result.hour = ConjunctionHour
     result.min = ConjunctionMinute
     result.sec = ConjunctionParts
