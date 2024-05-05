@@ -258,7 +258,7 @@ Public Function HDateNew(year As Long, month As Long, day As Long, _
     result.msec = msec
     result.offset = offset
 '    HDateSetDOY result
-'    HDateNew = result
+    HDateNew = result
 End Function
 
 Sub SetEY(ByRef date_in As hdate, EY As Boolean)
@@ -1267,6 +1267,24 @@ Public Function IsBirchasHaChama(date_in As hdate) As Boolean
         IsBirchasHaChama = True
     Else
         IsBirchasHaChama = False
+    End If
+End Function
+
+' Returns True if the day is Shabbos Mevorchim.
+Public Function IsShabbosMevorchim(date_in As hdate) As Boolean
+    If date_in.wday <> 0 Then
+        IsShabbosMevorchim = False
+        Exit Function
+    End If
+    If date_in.month = 6 Then
+        'Elul - no shabbos mevorchim
+        IsShabbosMevorchim = False
+        Exit Function
+    End If
+    If date_in.day >= 23 And date_in.day <= 29 Then
+        IsShabbosMevorchim = True
+    Else
+        IsShabbosMevorchim = False
     End If
 End Function
 
