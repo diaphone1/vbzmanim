@@ -333,8 +333,12 @@ Function HDateOrFormat(date_in As hdate, here As location) As String
 End Function
 
 'convert hdate holding molad info to string representation, suitable for molad announcement
-Function MoladFormat(molad As hdate) As String
-    MoladFormat = "יום " & NumToWDay(molad, True) & " שעה " & Format(TimeSerial(molad.hour, molad.min, 0), "hh:mm") & "ו-" & molad.sec & " חלקים"
+Function MoladFormat(molad As hdate, Optional full_date As Boolean = True) As String
+    If full_date Then
+        MoladFormat = "יום " & NumToWDay(molad, True) & ", " & NumToHChar(molad.day) & " " & NumToHMonth(molad.month, molad.leap) & ", שעה " & Format(TimeSerial(molad.hour, molad.min, 0), "hh:mm") & " ו-" & molad.sec & " חלקים"
+    Else
+        MoladFormat = "יום " & NumToWDay(molad, True) & " שעה " & Format(TimeSerial(molad.hour, molad.min, 0), "hh:mm") & " ו-" & molad.sec & " חלקים"
+    End If
 End Function
 
 'convert yomtov enum to char based representation
