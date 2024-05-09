@@ -274,8 +274,6 @@ Public Function GetDafYomiBavli(ByVal date_in As Date) As Daf
 
     
     Dim dafYomi As Daf ' = Nothing
-    Dim julianDay '= GetJulianDay([date])SecondaryMesechtaNumber
-    julianDay = GetJulianDay(date_in)
 
     Dim cycleNo ' = 0
     Dim dafNo As Integer ' = 0
@@ -457,5 +455,4 @@ Public Function GetDafYomiFormat(ByVal date_in As Date, Optional yerushalmi As B
     End If
     
 End Function
-
 
