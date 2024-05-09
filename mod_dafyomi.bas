@@ -1,6 +1,7 @@
 Attribute VB_Name = "mod_dafyomi"
 'dafyomi list & functions ported from https://github.com/NykUser/MyZman/
 
+Public mishnayos_arr(63) As String
 Public masechtosBavli(39) As String
 Public masechtosBavliTransliterated(39) As String
 Public masechtosYerushalmi(38) As String
@@ -10,14 +11,82 @@ Public blattPerMasechtaYerushalmi(38) As Integer
 
 Public Type Daf
     masechtaNumber As Integer
-    Page As Integer
+    Page As Integer 'used as mishnah for mishnah yomi
     HasSecondaryMesechta As Boolean
     SecondaryMesechtaNumber As Integer
+    PerekNumber As Integer ' used as perek for mishnah yomi
 End Type
 Private dafYomiStartDate As Date
 Private shekalimChangeDate As Date
 Dim dafyom_ready As Boolean
-
+Dim moshnayos_ready As Boolean
+Sub init_mishnayos()
+    mishnayos_arr(0) = "ברכות,berachos,5,8,6,7,5,8,5,8,5"
+    mishnayos_arr(1) = "פאה,peah,6,8,8,11,8,11,8,9"
+    mishnayos_arr(2) = "דמאי,demai,4,5,6,7,11,12,8"
+    mishnayos_arr(3) = "כלאיים,kilayim,9,11,7,9,8,9,8,6,10"
+    mishnayos_arr(4) = "שביעית,sheviis,8,10,10,10,9,6,7,11,9,9"
+    mishnayos_arr(5) = "תרומות,terumos,10,6,9,13,9,6,7,12,7,12,10"
+    mishnayos_arr(6) = "מעשרות,maasros,8,8,10,6,8"
+    mishnayos_arr(7) = "מעשר שני,maaser_sheni,7,10,13,12,15"
+    mishnayos_arr(8) = "חלה,chalah,9,8,10,11"
+    mishnayos_arr(9) = "ערלה,orlah,9,17,9"
+    mishnayos_arr(10) = "ביכורים,bikurim,11,11,12,5"
+    mishnayos_arr(11) = "שבת,shabbos,11,7,6,2,4,10,4,7,7,6,6,6,7,4,3,8,8,3,6,5,3,6,5,5"
+    mishnayos_arr(12) = "עירובין,eruvin,10,6,9,11,9,10,11,11,4,15"
+    mishnayos_arr(13) = "פסחים,pesachim,7,8,8,9,10,6,13,8,11,9"
+    mishnayos_arr(14) = "שקלים,shekalim,7,5,4,9,6,6,7,8"
+    mishnayos_arr(15) = "יומא,yoma,8,7,11,6,7,8,5,9"
+    mishnayos_arr(16) = "סוכה,sukkah,11,9,15,10,8"
+    mishnayos_arr(17) = "ביצה,beitzah,10,10,8,7,7"
+    mishnayos_arr(18) = "ראש השנה,rosh_hashanah,9,8,9,9"
+    mishnayos_arr(19) = "תענית,taanis,7,10,9,8"
+    mishnayos_arr(20) = "מגילה,megillah,11,6,6,10"
+    mishnayos_arr(21) = "מועד קטן,moed_katan,10,5,9"
+    mishnayos_arr(22) = "חגיגה,chagigah,8,7,8"
+    mishnayos_arr(23) = "יבמות,yevamos,4,10,10,13,6,6,6,6,6,9,7,6,13,9,10,7"
+    mishnayos_arr(24) = "כתובות,kesubos,10,10,9,12,9,7,10,8,9,6,6,4,11"
+    mishnayos_arr(25) = "נדרים,nedarim,4,5,11,8,6,10,9,7,10,8,12"
+    mishnayos_arr(26) = "נזיר,nazir,7,10,7,7,7,11,4,2,5"
+    mishnayos_arr(27) = "סוטה,sotah,9,6,8,5,5,4,8,7,15"
+    mishnayos_arr(28) = "גיטין,gitin,6,7,8,9,9,7,9,10,10"
+    mishnayos_arr(29) = "קידושין,kiddushin,10,10,13,14"
+    mishnayos_arr(30) = "בבא קמא,bava_kamma,4,6,11,9,7,6,7,7,12,10"
+    mishnayos_arr(31) = "בבא מציעא,bava_metzia,8,11,12,12,11,8,11,9,13,6"
+    mishnayos_arr(32) = "בבא בתרא,bava_basra,6,14,8,9,11,8,4,8,10,8"
+    mishnayos_arr(33) = "סנהדרין,sanhedrin,6,5,8,5,5,6,11,7,6,6,6"
+    mishnayos_arr(34) = "מכות,makkos,10,8,16"
+    mishnayos_arr(35) = "שבועות,shevuos,7,5,11,13,5,7,8,6"
+    mishnayos_arr(36) = "עדויות,eduyos,14,10,12,12,7,3,9,7"
+    mishnayos_arr(37) = "עבודה זרה,avodah_zarah,9,7,10,12,12"
+    mishnayos_arr(38) = "אבות,avos,18,16,18,22,23,11"
+    mishnayos_arr(39) = "הוריות,horiyos,5,7,8"
+    mishnayos_arr(40) = "זבחים,zevachim,4,5,6,6,8,7,6,12,7,8,8,6,8,10"
+    mishnayos_arr(41) = "מנחות,menachos,4,5,7,5,9,7,6,7,9,9,9,5,11"
+    mishnayos_arr(42) = "חולין,chullin,7,10,7,7,5,7,6,6,8,4,2,5"
+    mishnayos_arr(43) = "בכורות,bechoros,7,9,4,10,6,12,7,10,8"
+    mishnayos_arr(44) = "ערכין,arachin,4,6,5,4,6,5,5,7,8"
+    mishnayos_arr(45) = "תמורה,temurah,6,3,5,4,6,5,6"
+    mishnayos_arr(46) = "כריתות,kerisos,7,6,10,3,8,9"
+    mishnayos_arr(47) = "מעילה,meilah,4,9,8,6,5,6"
+    mishnayos_arr(48) = "תמיד,tamid,4,5,9,3,6,4,3"
+    mishnayos_arr(49) = "מדות,midos,9,6,8,7,4"
+    mishnayos_arr(50) = "קנים,kinnim,4,5,6"
+    mishnayos_arr(51) = "כלים,keilim,9,8,8,4,11,4,6,11,8,8,9,8,8,8,6,8,17,9,10,7,3,10,5,17,9,9,12,10,8,4"
+    mishnayos_arr(52) = "אהלות,ohalos,8,7,7,3,7,7,6,6,16,7,9,8,6,7,10,5,5,10"
+    mishnayos_arr(53) = "נגעים,negaim,6,5,8,11,5,8,5,10,3,10,12,7,12,13"
+    mishnayos_arr(54) = "פרה,parah,4,5,11,4,9,5,12,11,9,6,9,11"
+    mishnayos_arr(55) = "טהרות,taharos,9,8,8,13,9,10,9,9,9,8"
+    mishnayos_arr(56) = "מקוואות,mikvaos,8,10,4,5,6,11,7,5,7,8"
+    mishnayos_arr(57) = "נדה,niddah,7,7,7,7,9,14,5,4,11,8"
+    mishnayos_arr(58) = "מכשירין,machshirin,6,11,8,10,11,8"
+    mishnayos_arr(59) = "זבים,zavim,6,4,3,7,12"
+    mishnayos_arr(60) = "טבול יום,tevul_yom,5,8,6,7"
+    mishnayos_arr(61) = "ידים,yadayim,5,4,5,8"
+    mishnayos_arr(62) = "עוקצין,uktzin,6,10,12"
+    mishnayos_ready = True
+    
+End Sub
 Sub init_dafyomi()
     masechtosBavli(0) = "ברכות"
     masechtosBavli(1) = "שבת"
@@ -454,5 +523,64 @@ Public Function GetDafYomiFormat(ByVal date_in As Date, Optional yerushalmi As B
         GetDafYomiFormat = masechtosBavli(result.masechtaNumber) & " דף " & NumToHChar(result.Page)
     End If
     
+End Function
+
+
+Public Function GetMishnaYomi(ByVal date_in As Date) As Daf
+    Const MISHNAH_YOMI_START_DAY As Date = #5/20/1947# 'note - officially it was 6th of sivan 5707 (Shavuos 1947), but since the first cycle was 5 days shorter then alef sivan is being used instead.
+    Const DaysPerCycle = 2096 'total of 4192 Mishanyos / 2 per day
+    
+    Dim result As Daf
+    Dim day_in_cycle As Integer
+    Dim str_parts() As String
+    Dim sum As Integer
+    Dim nxt_sum As Integer
+   
+    If date_in < MISHNAH_YOMI_START_DAY Then
+        result.Page = -1
+        result.masechtaNumber = 0
+        result.HasSecondaryMesechta = False
+        result.SecondaryMesechtaNumber = 0
+        GetMishnaYomi = result
+        Exit Function
+    End If
+
+    'elapsed days since the start of the current cycle
+    day_in_cycle = (DateDiff("d", MISHNAH_YOMI_START_DAY, date_in)) Mod DaysPerCycle
+    
+    For I = 0 To 62 'I iterates over masechtos
+        'get array parts from string (each number represents the num of mishnaos in a perek)
+        str_parts = Split(mishnayos_arr(I), ",")
+        nxt_sum = 0
+        'J iterates over the chapters and counts the total mishanyos since the beginning of the masechet
+        For J = 2 To UBound(str_parts) 'array strats from index 2, since 0 & 1 are titles of the masechtos
+            nxt_sum = nxt_sum + Val(str_parts(J)) ' nxt_sum counts the mishnayos since the begining of the masechet
+            
+            'return the result if mishnayos count since the beginning of the cycle is between current perek and the next one
+            If day_in_cycle * 2 >= sum And day_in_cycle * 2 <= sum + nxt_sum Then
+                result.masechtaNumber = I
+                result.PerekNumber = J - 1 'perek
+                result.Page = day_in_cycle * 2 - sum + 1 'mishnah
+                GetMishnaYomi = result
+                Exit Function
+            End If
+        Next J
+        sum = sum + nxt_sum 'the currnet amount of mishnayos since first masechet
+    Next I
+     
+    
+End Function
+
+Public Function GetMishnaYomiFormat(ByVal date_in As Date) As String
+    Dim result As Daf
+    If hdateformat_ready = False Then init_hdateformat
+    If mishnayos_ready = False Then init_mishnayos
+
+    Dim str_parts() As String
+        
+    result = GetMishnaYomi(date_in)
+    str_parts = Split(mishnayos_arr(result.masechtaNumber), ",")
+    
+    GetMishnaYomiFormat = str_parts(0) & " פרק " & NumToHChar(result.PerekNumber) & " משנה " & NumToHChar(result.Page)
 End Function
 
