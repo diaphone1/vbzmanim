@@ -351,6 +351,8 @@ Public Function GetDafYomiBavli(ByVal date_in As Date) As Daf
     If date_in < dafYomiStartDate Then
         ' TODO: should we return a null or throw an IllegalArgumentException?
         'Throw New ArgumentException([date] & " is prior to organized Daf Yomi Bavli cycles that started on " & dafYomiStartDate)
+            dafYomi.Page = -1
+            GetDafYomiBavli = dafYomi
         Exit Function
     End If
 
@@ -513,14 +515,18 @@ Public Function GetDafYomiFormat(ByVal date_in As Date, Optional yerushalmi As B
     If yerushalmi Then
         result = GetDafYomiYerushalmi(date_in)
         If result.Page = -1 Then
-            GetDafYomiFormat = "איו דף"
+            GetDafYomiFormat = "-"
         Else
             GetDafYomiFormat = masechtosYerushalmi(result.masechtaNumber) & " דף " & NumToHChar(result.Page)
         
         End If
     Else
         result = GetDafYomiBavli(date_in)
-        GetDafYomiFormat = masechtosBavli(result.masechtaNumber) & " דף " & NumToHChar(result.Page)
+        If result.Page = -1 Then
+            GetDafYomiFormat = "-"
+        Else
+            GetDafYomiFormat = masechtosBavli(result.masechtaNumber) & " דף " & NumToHChar(result.Page)
+        End If
     End If
     
 End Function
@@ -535,7 +541,10 @@ Public Function GetMishnaYomi(ByVal date_in As Date) As Daf
     Dim str_parts() As String
     Dim sum As Integer
     Dim nxt_sum As Integer
-   
+    Dim m_since_cycle As Integer
+    Dim m_since_masechet As Integer
+    Dim m_since_perek As Integer
+    
     If date_in < MISHNAH_YOMI_START_DAY Then
         result.Page = -1
         result.masechtaNumber = 0
@@ -554,16 +563,18 @@ Public Function GetMishnaYomi(ByVal date_in As Date) As Daf
         nxt_sum = 0
         'J iterates over the chapters and counts the total mishanyos since the beginning of the masechet
         For J = 2 To UBound(str_parts) 'array strats from index 2, since 0 & 1 are titles of the masechtos
-            nxt_sum = nxt_sum + Val(str_parts(J)) ' nxt_sum counts the mishnayos since the begining of the masechet
-            
-            'return the result if mishnayos count since the beginning of the cycle is between current perek and the next one
-            If day_in_cycle * 2 >= sum And day_in_cycle * 2 <= sum + nxt_sum Then
+            m_since_cycle = day_in_cycle * 2 'mishanyos since the beginning of the cycle
+            m_since_masechet = m_since_cycle - sum 'mishanyos since the beginning of the masechet
+            m_since_perek = m_since_masechet - nxt_sum 'mishanyos since the beginning of the perek
+            'return the result if current mishnayos count since the beginning of the cycle is between current perek and the next one
+            If m_since_cycle >= sum And m_since_cycle < sum + nxt_sum + str_parts(J) Then
                 result.masechtaNumber = I
                 result.PerekNumber = J - 1 'perek
-                result.Page = day_in_cycle * 2 - sum + 1 'mishnah
+                result.Page = m_since_perek + 1 'mishnah
                 GetMishnaYomi = result
                 Exit Function
             End If
+            nxt_sum = nxt_sum + Val(str_parts(J)) ' nxt_sum counts the mishnayos since the begining of the masechet
         Next J
         sum = sum + nxt_sum 'the currnet amount of mishnayos since first masechet
     Next I
@@ -579,8 +590,12 @@ Public Function GetMishnaYomiFormat(ByVal date_in As Date) As String
     Dim str_parts() As String
         
     result = GetMishnaYomi(date_in)
+    If result.Page = -1 Then
+        GetMishnaYomiFormat = "-"
+        Exit Function
+    End If
     str_parts = Split(mishnayos_arr(result.masechtaNumber), ",")
-    
+        
     GetMishnaYomiFormat = str_parts(0) & " פרק " & NumToHChar(result.PerekNumber) & " משנה " & NumToHChar(result.Page)
 End Function
 
